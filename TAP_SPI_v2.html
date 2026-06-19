@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">TAP – Sistema de Produção Inova · Inova</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red:#cc1010; --red-dark:#a00d0d; --red-light:#f5d5d5;
+  --black:#111111; --gray-dark:#1e1e1e; --gray-mid:#444444;
+  --gray-soft:#666; --gray-light:#f5f5f5; --white:#ffffff;
+  --border:#e2e2e2; --edit-ring:#cc1010;
+  --font-h:'Montserrat',sans-serif; --font-b:'Open Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-b);background:#e8e8e8;color:var(--black);}
+
+#toolbar {
+  position:sticky;top:0;z-index:1000;
+  background:var(--black);
+  display:flex;align-items:center;gap:12px;
+  padding:10px 24px;
+  border-bottom:2px solid var(--red);
+  box-shadow:0 2px 12px rgba(0,0,0,0.4);
+}
+#toolbar .t-brand {
+  font-family:var(--font-h);font-weight:800;font-size:14px;
+  color:#fff;letter-spacing:2px;text-transform:uppercase;
+  margin-right:auto;
+}
+#toolbar .t-brand span{color:var(--red);}
+.t-btn {
+  display:inline-flex;align-items:center;gap:7px;
+  font-family:var(--font-h);font-size:11px;font-weight:700;
+  letter-spacing:.8px;text-transform:uppercase;
+  border:none;cursor:pointer;border-radius:3px;
+  padding:8px 16px;transition:all .15s;
+}
+.t-btn.primary{background:var(--red);color:#fff;}
+.t-btn.primary:hover{background:var(--red-dark);}
+.t-btn.secondary{background:#2a2a2a;color:#ccc;border:1px solid #444;}
+.t-btn.secondary:hover{background:#333;color:#fff;}
+.t-btn.success{background:#1a7a1a;color:#fff;}
+.t-btn.success:hover{background:#155e15;}
+.t-sep{width:1px;height:24px;background:#333;}
+#edit-mode-toggle.active{background:#cc5500;color:#fff;}
+.t-status{font-size:11px;color:#888;font-family:var(--font-h);}
+#save-indicator{color:#4caf50;font-size:11px;font-family:var(--font-h);opacity:0;transition:opacity .4s;}
+
+#page-wrap {
+  max-width:900px;margin:32px auto;
+  background:#fff;
+  box-shadow:0 4px 32px rgba(0,0,0,0.14);
+}
+
+.doc-header {
+  background:var(--black);
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+.doc-header::after {
+  content:'SPI';
+  position:absolute;right:-16px;top:-8px;
+  font-family:var(--font-h);font-weight:900;font-size:130px;
+  color:rgba(204,16,16,.07);pointer-events:none;user-select:none;
+}
+.header-stripe{height:4px;background:var(--red);}
+.header-inner{padding:28px 36px 24px;}
+.header-tag {
+  display:inline-block;background:var(--red);color:#fff;
+  font-family:var(--font-h);font-size:9px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:3px 10px;margin-bottom:12px;
+}
+.header-title {
+  font-family:var(--font-h);font-weight:900;
+  font-size:34px;color:#fff;line-height:1.1;margin-bottom:8px;
+}
+.header-title em{color:var(--red);font-style:normal;}
+.header-sub {
+  font-size:13px;color:#999;max-width:560px;line-height:1.7;
+}
+
+.id-row {
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid #222;
+}
+.id-cell {
+  padding:14px 18px;border-right:1px solid #222;
+}
+.id-cell:last-child{border-right:none;}
+.id-label {
+  font-family:var(--font-h);font-size:8px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--red);margin-bottom:5px;
+}
+.id-value {
+  font-family:var(--font-h);font-size:12px;font-weight:600;color:#fff;
+}
+.status-dot{color:var(--red);}
+
+.section {
+  border-bottom:1px solid var(--border);
+}
+.section-head {
+  display:flex;align-items:center;gap:12px;
+  padding:13px 24px;
+  background:var(--gray-light);
+  border-bottom:1px solid var(--border);
+}
+.sec-num {
+  width:26px;height:26px;border-radius:50%;
+  background:var(--red);color:#fff;
+  font-family:var(--font-h);font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.sec-title {
+  font-family:var(--font-h);font-weight:700;font-size:11px;
+  text-transform:uppercase;letter-spacing:1px;color:var(--black);
+  flex:1;
+}
+.section-body{padding:20px 24px;}
+
+body.editing [contenteditable="true"] {
+  outline: 1.5px dashed var(--edit-ring);
+  outline-offset: 2px;
+  min-width: 40px;
+  cursor: text;
+  transition: background 0.15s;
+}
+body.editing [contenteditable="true"]:hover {
+  background: rgba(204,16,16,0.05);
+}
+body.editing [contenteditable="true"]:focus {
+  background: rgba(204,16,16,0.07);
+  outline-color: var(--red-dark);
+}
+body.editing .add-row-btn,
+body.editing .del-btn { display: inline-flex; }
+.add-row-btn, .del-btn { display: none; }
+
+.add-row-btn {
+  align-items: center; gap: 5px;
+  margin-top: 10px;
+  background: transparent; border: 1.5px dashed #ccc;
+  color: #999; font-size: 11px; font-family: var(--font-h); font-weight: 600;
+  letter-spacing: .5px; padding: 6px 14px; border-radius: 3px; cursor: pointer;
+  transition: all .15s;
+}
+.add-row-btn:hover { border-color: var(--red); color: var(--red); }
+
+.del-btn {
+  align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #ffeeee; border: 1px solid #fcc;
+  color: #cc3333; font-size: 11px; font-weight: 700;
+  cursor: pointer; flex-shrink: 0; margin-left: 6px;
+  transition: all .15s;
+}
+.del-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.team-card {
+  border:1px solid var(--border);border-left:3px solid var(--red);
+  border-radius:3px;padding:12px 14px;
+  display:flex;align-items:flex-start;
+  justify-content:space-between;
+}
+.team-card-inner{flex:1;}
+.team-role{font-family:var(--font-h);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);margin-bottom:3px;}
+.team-name{font-size:12px;color:var(--black);font-weight:500;}
+
+.obj-text{font-size:13px;color:var(--gray-mid);line-height:1.7;margin-bottom:16px;}
+.opp-box{
+  background:var(--gray-light);border-left:3px solid var(--red);
+  border-radius:3px;padding:14px 16px;margin-bottom:16px;
+  font-size:13px;color:var(--gray-mid);line-height:1.7;
+}
+.opp-label{font-family:var(--font-h);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--red);margin-bottom:6px;}
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.metric{background:var(--black);border-radius:3px;padding:16px;text-align:center;}
+.metric-num{font-family:var(--font-h);font-weight:900;font-size:20px;color:var(--red);line-height:1;margin-bottom:4px;}
+.metric-desc{font-size:11px;color:#aaa;line-height:1.4;}
+
+.list-2col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.list-1col{display:flex;flex-direction:column;gap:8px;}
+.list-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 13px;border-radius:3px;font-size:13px;
+  color:var(--gray-mid);line-height:1.5;
+}
+.list-item.gray-bg{background:var(--gray-light);}
+.list-item.red-left{border-left:3px solid var(--red);background:var(--gray-light);}
+.list-item.red-bg{background:#fff5f5;border:1px solid #f0c0c0;}
+.list-item.yellow-bg{background:#fffbf0;border:1px solid #f0e0a0;}
+.list-bullet{color:var(--red);font-size:12px;margin-top:1px;flex-shrink:0;font-weight:700;}
+
+.ganhos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ganha{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 13px;border:1px solid var(--border);border-radius:3px;
+  font-size:12px;color:var(--gray-mid);
+}
+.ganha-icon{
+  width:26px;height:26px;background:var(--red);border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+}
+
+.hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.hist-card{background:var(--black);border-radius:3px;padding:14px;text-align:center;}
+.hist-year{font-family:var(--font-h);font-size:9px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.hist-val{font-family:var(--font-h);font-weight:900;font-size:20px;color:var(--red);}
+
+.d-sub{padding:2px 0 4px 0;font-size:11px;color:var(--gray-mid);line-height:1.7;}
+.d-sub-item{display:flex;align-items:flex-start;gap:7px;padding:3px 0;}
+.d-sub-bullet{color:#ccc;font-size:10px;flex-shrink:0;margin-top:2px;}
+
+.deliverables{display:flex;flex-direction:column;}
+.deliverable{display:flex;align-items:stretch;gap:14px;}
+.d-left{display:flex;flex-direction:column;align-items:center;width:34px;flex-shrink:0;}
+.d-dot{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--red);color:#fff;
+  font-family:var(--font-h);font-weight:800;font-size:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;
+}
+.d-line{width:2px;flex:1;background:#f0c0c0;min-height:16px;}
+.d-content{padding:2px 0 18px;font-size:12px;color:var(--gray-mid);line-height:1.6;flex:1;}
+.d-content strong{display:block;font-family:var(--font-h);font-weight:700;font-size:11px;color:var(--black);margin-bottom:2px;}
+.d-row{display:flex;align-items:flex-start;justify-content:space-between;}
+
+.risk-bullet-block{display:flex;flex-direction:column;gap:14px;}
+.risk-bullet-item{border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.risk-bullet-header{background:var(--black);padding:8px 14px;display:flex;align-items:center;gap:10px;}
+.risk-bullet-id{font-family:var(--font-h);font-weight:800;font-size:11px;color:var(--red);}
+.risk-bullet-title{font-family:var(--font-h);font-weight:700;font-size:11px;color:#fff;flex:1;}
+.risk-bullet-body{padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.risk-col-label{font-family:var(--font-h);font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:5px;}
+.risk-col-text{font-size:12px;color:var(--gray-mid);line-height:1.6;}
+.risk-col-text ul{padding-left:14px;margin:0;}
+.risk-col-text li{margin-bottom:3px;}
+
+.risks{display:flex;flex-direction:column;gap:8px;}
+.risk-row{
+  display:grid;grid-template-columns:42px 1fr 1fr;
+  border:1px solid var(--border);border-radius:3px;overflow:hidden;
+}
+.risk-id{
+  background:var(--black);color:var(--red);
+  font-family:var(--font-h);font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.risk-cell{padding:10px 14px;font-size:12px;color:var(--gray-mid);line-height:1.5;}
+.risk-cell:nth-child(3){background:#fafafa;border-left:1px solid var(--border);}
+.risk-label{font-family:var(--font-h);font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:3px;}
+.risk-row-wrap{display:flex;align-items:stretch;}
+.risk-row-wrap .risk-row{flex:1;}
+
+.gmo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.gmo-card{background:var(--black);border-radius:3px;padding:16px 14px;color:#bbb;font-size:12px;line-height:1.6;}
+.gmo-title{font-family:var(--font-h);font-weight:700;color:var(--red);font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:5px;}
+
+/* Cronograma de Sprints */
+.sprints-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.sprint-card{border:1px solid var(--border);border-radius:3px;overflow:hidden;}
+.sprint-header{background:var(--black);padding:10px 12px;}
+.sprint-num{font-family:var(--font-h);font-weight:800;font-size:10px;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.sprint-period{font-family:var(--font-h);font-size:9px;color:#888;}
+.sprint-body{padding:10px 12px;}
+.sprint-title{font-family:var(--font-h);font-weight:700;font-size:10px;color:var(--black);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.sprint-items{font-size:11px;color:var(--gray-mid);line-height:1.7;}
+.sprint-badge{
+  display:inline-block;background:var(--red);color:#fff;
+  font-family:var(--font-h);font-size:8px;font-weight:700;
+  padding:2px 7px;border-radius:2px;margin-top:6px;
+}
+.sprint-badge.green{background:#1a7a1a;}
+
+.restricoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+.doc-footer{
+  background:var(--black);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 24px;
+  border-top:2px solid var(--red);
+}
+.doc-footer span{font-family:var(--font-h);font-size:10px;color:#555;letter-spacing:1px;text-transform:uppercase;}
+.doc-footer span em{color:var(--red);font-style:normal;}
+.doc-footer .doc-date{font-family:var(--font-h);font-size:10px;color:#555;}
+
+body.editing .section-head::after {
+  content:'✎ editável';
+  font-size:9px;color:#bbb;font-family:var(--font-h);letter-spacing:.5px;
+  margin-left:auto;
+}
+
+@media print {
+  #toolbar{display:none!important;}
+  body{background:#fff;}
+  #page-wrap{margin:0;box-shadow:none;max-width:100%;}
+  .add-row-btn,.del-btn{display:none!important;}
+  [contenteditable]{outline:none!important;background:transparent!important;}
+  .section{break-inside:avoid;}
+}
+</style>
+</head>
+<body class="editing">
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="t-brand">Inova <span>TAP</span></div>
+  <button class="t-btn secondary" id="edit-mode-toggle" onclick="toggleEdit()">✎&nbsp; Edição ON</button>
+  <div class="t-sep"></div>
+  <button class="t-btn success" onclick="saveLocal()">💾&nbsp; Salvar</button>
+  <button class="t-btn primary" onclick="exportPDF()">⬇&nbsp; Exportar PDF</button>
+  <span id="save-indicator">✓ Salvo</span>
+</div>
+
+<!-- DOCUMENTO -->
+<div id="page-wrap">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="header-stripe"></div>
+    <div class="header-inner">
+      <div class="header-tag" contenteditable="true">Termo de Abertura do Projeto · 4.4.1</div>
+      <div class="header-title" id="main-title-editable" contenteditable="true">Sistema de Produção <em>Inova</em></div>
+      <div class="header-sub" contenteditable="true">Estruturação do SPI — promovendo integração, padronização e sustentação das iniciativas de melhoria contínua, gestão operacional e transformação industrial da Inova Sistemas Eletrônicos, por meio da definição de pilares, governança, rotinas e ferramentas de acompanhamento.</div>
+    </div>
+    <div class="id-row">
+      <div class="id-cell">
+        <div class="id-label" contenteditable="true">Nome do Projeto</div>
+        <div class="id-value" contenteditable="true">SPI — Estruturação das Ferramentas</div>
+      </div>
+      <div class="id-cell">
+        <div class="id-label" contenteditable="true">Sponsor</div>
+        <div class="id-value" contenteditable="true">Diretoria Industrial / Operações</div>
+      </div>
+      <div class="id-cell">
+        <div class="id-label" contenteditable="true">Líder</div>
+        <div class="id-value" contenteditable="true">Thais Castilhos</div>
+      </div>
+      <div class="id-cell">
+        <div class="id-label" contenteditable="true">Status</div>
+        <div class="id-value"><span class="status-dot">●</span> <span contenteditable="true">Em Andamento</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. EQUIPE -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">1</div>
+      <div class="sec-title" contenteditable="true">Equipe do Projeto</div>
+    </div>
+    <div class="section-body">
+      <div class="team-grid" id="team-grid">
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Líder do Projeto</div>
+            <div class="team-name" contenteditable="true">Thais Castilhos</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Sponsor — Diretoria Industrial / Operações</div>
+            <div class="team-name" contenteditable="true">A definir</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Produção</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Engenharia</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Qualidade</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">PCP</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">TI / Sistemas</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Métodos e Processos (M&amp;P)</div>
+            <div class="team-name" contenteditable="true">Representante da área</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+        <div class="team-card" data-team>
+          <div class="team-card-inner">
+            <div class="team-role" contenteditable="true">Lideranças Operacionais</div>
+            <div class="team-name" contenteditable="true">Supervisores e Coordenadores das áreas</div>
+          </div>
+          <button class="del-btn" onclick="delRow(this,'team-card')" title="Remover">✕</button>
+        </div>
+      </div>
+      <button class="add-row-btn" onclick="addTeam()">+ Adicionar membro</button>
+    </div>
+  </div>
+
+  <!-- 2. OBJETIVO E CONTEXTO -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">2</div>
+      <div class="sec-title" contenteditable="true">Objetivo e Contexto</div>
+    </div>
+    <div class="section-body">
+      <p class="obj-text" contenteditable="true">Estruturar o <strong>Sistema de Produção Inova (SPI)</strong>, promovendo integração, padronização e sustentação das iniciativas de melhoria contínua, gestão operacional e transformação industrial da empresa. O projeto define os pilares do SPI, estabelece a governança, padroniza rotinas de acompanhamento, estrutura indicadores e consolida um modelo integrado que suporte a evolução futura para iniciativas de excelência operacional como o TPM.</p>
+
+      <div class="opp-box">
+        <div class="opp-label">Problema / Oportunidade</div>
+        <span contenteditable="true">A Inova vem ampliando suas iniciativas voltadas à melhoria contínua, gestão operacional, digitalização industrial e acompanhamento de performance por meio de projetos como 5S, Kaizens, MES, Shop Floor Management, indicadores produtivos e gestão visual. Como oportunidade de evolução, identifica-se a necessidade de estruturar um modelo integrado para o SPI, fortalecendo a governança, a integração entre iniciativas, a padronização de rotinas, o acompanhamento de indicadores e a sustentabilidade das ações em andamento — criando também a base organizacional para evolução futura de iniciativas de excelência operacional.</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 3. CRONOGRAMA DE SPRINTS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">3</div>
+      <div class="sec-title" contenteditable="true">Cronograma de Sprints · 4 Sprints · 28/04/2026 a 31/12/2026</div>
+    </div>
+    <div class="section-body">
+      <div class="sprints-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="sprint-card">
+          <div class="sprint-header">
+            <div class="sprint-num" contenteditable="true">Sprint 1: S1</div>
+            <div class="sprint-period" contenteditable="true">Jan – Mar / 2026</div>
+          </div>
+          <div class="sprint-body">
+            <div class="sprint-title" contenteditable="true">Não Executado</div>
+            <div class="sprint-items" contenteditable="true">Sprint sem execução formal — projeto iniciado posteriormente ao período previsto para S1. As atividades de planejamento e kick-off foram incorporadas ao Sprint 2.</div>
+            <div class="sprint-badge" style="background:#555" contenteditable="true">Não Executado</div>
+          </div>
+        </div>
+        <div class="sprint-card">
+          <div class="sprint-header">
+            <div class="sprint-num" contenteditable="true">Sprint 2: S2</div>
+            <div class="sprint-period" contenteditable="true">28/04 – 30/06/2026</div>
+          </div>
+          <div class="sprint-body">
+            <div class="sprint-title" contenteditable="true">Estruturação SPI</div>
+            <div class="sprint-items" contenteditable="true">Diagnóstico das iniciativas em andamento<br>Levantamento das ferramentas existentes<br>Estrutura inicial da Casa SPI<br>Definição dos pilares SPI<br>Mapeamento dos projetos relacionados<br>Estrutura preliminar de governança<br>Definição inicial dos indicadores SPI<br>Cronograma macro de evolução SPI</div>
+            <div class="sprint-badge" contenteditable="true">Em Andamento</div>
+          </div>
+        </div>
+        <div class="sprint-card">
+          <div class="sprint-header">
+            <div class="sprint-num" contenteditable="true">Sprint 3: S3</div>
+            <div class="sprint-period" contenteditable="true">01/07 – 30/09/2026</div>
+          </div>
+          <div class="sprint-body">
+            <div class="sprint-title" contenteditable="true">Integração e Padronização</div>
+            <div class="sprint-items" contenteditable="true">Fluxo padronizado de melhoria contínua<br>Estrutura de acompanhamento SPI<br>Modelo de gestão visual SPI<br>Estrutura de reporte SPI<br>Integração inicial com projetos em andamento<br>Definição de facilitadores SPI<br>Painel inicial de acompanhamento SPI<br><strong>🏁 Marco: Aplicação Piloto do modelo SPI</strong></div>
+            <div class="sprint-badge" style="background:#555" contenteditable="true">Não Iniciado</div>
+          </div>
+        </div>
+        <div class="sprint-card">
+          <div class="sprint-header">
+            <div class="sprint-num" contenteditable="true">Sprint 4: S4</div>
+            <div class="sprint-period" contenteditable="true">01/10 – 31/12/2026</div>
+          </div>
+          <div class="sprint-body">
+            <div class="sprint-title" contenteditable="true">Consolidação Inicial</div>
+            <div class="sprint-items" contenteditable="true">Padrão inicial SPI<br>Consolidação da governança SPI<br>Roadmap de evolução SPI<br>Plano de sustentação SPI<br>Consolidação do piloto<br>Apresentação executiva SPI<br>Relatório final do projeto<br><strong>🔭 Direcionamento inicial para evolução futura: TPM</strong></div>
+            <div class="sprint-badge" style="background:#555" contenteditable="true">Não Iniciado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ESCOPO -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">4</div>
+      <div class="sec-title" contenteditable="true">Escopo — O que está incluído</div>
+    </div>
+    <div class="section-body">
+      <div class="list-2col" id="escopo-list">
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Estruturação do Sistema de Produção Inova (SPI) como modelo integrado de gestão operacional</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Definição dos pilares SPI e estruturação da governança do sistema</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Padronização de rotinas de acompanhamento e estruturação dos indicadores SPI</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Integração das iniciativas de melhoria contínua existentes (5S, Kaizens, Shop Floor, MES, Gestão Visual)</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Estruturação do fluxo de melhoria contínua e do modelo de gestão visual SPI</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Definição de fóruns de governança e estrutura de reportes SPI</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Estruturação de modelo de sustentação e aplicação piloto do SPI</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item gray-bg"><span class="list-bullet">▸</span><span contenteditable="true">Estruturação de base organizacional para evolução futura de iniciativas de excelência operacional (TPM)</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addListItem('escopo-list','gray-bg')">+ Adicionar item</button>
+    </div>
+  </div>
+
+  <!-- 5. GANHOS ESPERADOS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">5</div>
+      <div class="sec-title" contenteditable="true">Ganhos Esperados</div>
+    </div>
+    <div class="section-body">
+      <div class="ganhos-grid" id="ganhos-grid">
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">🔗</div><span contenteditable="true">Maior integração entre iniciativas operacionais de melhoria contínua</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">🏛️</div><span contenteditable="true">Fortalecimento da governança operacional e visibilidade das iniciativas</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">📋</div><span contenteditable="true">Padronização das rotinas de acompanhamento e indicadores industriais</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">📊</div><span contenteditable="true">Ampliação do acompanhamento e definição de indicadores corporativos SPI</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">♻️</div><span contenteditable="true">Sustentabilidade das ações de melhoria contínua no longo prazo</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+        <div class="ganha"><div class="ganha-icon" contenteditable="true">🚀</div><span contenteditable="true">Base organizacional para evolução futura rumo ao TPM e excelência operacional</span><button class="del-btn" onclick="delRow(this,'ganha')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addGanha()">+ Adicionar ganho</button>
+    </div>
+  </div>
+
+  <!-- 6. PREMISSAS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">6</div>
+      <div class="sec-title" contenteditable="true">Premissas</div>
+    </div>
+    <div class="section-body">
+      <div class="list-1col" id="premissas-list">
+        <div class="list-item red-left"><span contenteditable="true">Apoio ativo das lideranças ao projeto e às decisões de padronização do SPI.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-left"><span contenteditable="true">Participação das áreas envolvidas (Produção, Engenharia, Qualidade, PCP, TI, M&P e lideranças operacionais) nas etapas de construção do SPI.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-left"><span contenteditable="true">Continuidade das iniciativas de melhoria contínua em andamento durante o período do projeto.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-left"><span contenteditable="true">Disponibilidade mínima das equipes para participação em reuniões, workshops e alinhamentos periódicos.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-left"><span contenteditable="true">Acesso aos indicadores e dados das iniciativas existentes para subsidiar o diagnóstico e a construção do modelo SPI.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-left"><span contenteditable="true">Colaboração entre as áreas na construção conjunta do SPI, sem disputas de escopo ou protagonismo de departamentos.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addListItem('premissas-list','red-left')">+ Adicionar premissa</button>
+    </div>
+  </div>
+
+  <!-- 7. RESTRIÇÕES -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">7</div>
+      <div class="sec-title" contenteditable="true">Restrições</div>
+    </div>
+    <div class="section-body">
+      <div class="restricoes-grid" id="restricoes-list">
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Projeto executado paralelamente às atividades operacionais das áreas, sem dedicação exclusiva das equipes.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Tempo limitado para execução do ciclo completo até o final de 2026.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Disponibilidade parcial das áreas envolvidas, dada a carga operacional existente.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Diferentes níveis de maturidade em melhoria contínua entre os setores da empresa.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Dependência de alinhamento constante entre as áreas e os projetos em andamento.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item yellow-bg"><span class="list-bullet">⚠</span><span contenteditable="true">Limitação de tempo e disponibilidade para realização de treinamentos e workshops formativos.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addListItem('restricoes-list','yellow-bg')">+ Adicionar restrição</button>
+    </div>
+  </div>
+
+  <!-- 8. ENTREGÁVEIS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">8</div>
+      <div class="sec-title" contenteditable="true">Entregáveis por Sprint</div>
+    </div>
+    <div class="section-body">
+      <div class="deliverables" id="deliverables-list">
+
+        <div class="deliverable" data-deliv>
+          <div class="d-left"><div class="d-dot" contenteditable="true">S1</div><div class="d-line"></div></div>
+          <div class="d-content">
+            <div class="d-row">
+              <div>
+                <strong contenteditable="true">Sprint 1 — Não Executado</strong>
+                <div class="d-sub">
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Sprint sem execução formal — projeto iniciado posteriormente ao período previsto. As atividades de planejamento e kick-off foram incorporadas ao Sprint 2.</span></div>
+                </div>
+              </div>
+              <button class="del-btn" onclick="delRow(this,'deliverable')" title="Remover" style="margin-top:2px;">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="deliverable" data-deliv>
+          <div class="d-left"><div class="d-dot" contenteditable="true">S2</div><div class="d-line"></div></div>
+          <div class="d-content">
+            <div class="d-row">
+              <div>
+                <strong contenteditable="true">Sprint 2 — Estruturação SPI</strong>
+                <div class="d-sub">
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Diagnóstico completo das iniciativas de melhoria contínua em andamento e levantamento das ferramentas existentes</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Estrutura inicial da Casa SPI com os pilares definidos</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Mapeamento dos projetos relacionados ao SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Estrutura preliminar de governança do SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Definição inicial dos indicadores de acompanhamento SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Cronograma macro de evolução SPI</span></div>
+                </div>
+              </div>
+              <button class="del-btn" onclick="delRow(this,'deliverable')" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="deliverable" data-deliv>
+          <div class="d-left"><div class="d-dot" contenteditable="true">S3</div><div class="d-line"></div></div>
+          <div class="d-content">
+            <div class="d-row">
+              <div>
+                <strong contenteditable="true">Sprint 3 — Integração e Padronização</strong>
+                <div class="d-sub">
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Fluxo padronizado de melhoria contínua</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Modelo de gestão visual SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Estrutura de acompanhamento e reporte SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Integração inicial com projetos em andamento e definição de facilitadores SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Painel inicial de acompanhamento SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">🏁 Marco: Aplicação piloto do modelo SPI em área(s) selecionada(s) da fábrica</span></div>
+                </div>
+              </div>
+              <button class="del-btn" onclick="delRow(this,'deliverable')" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="deliverable" data-deliv>
+          <div class="d-left"><div class="d-dot" contenteditable="true">S4</div></div>
+          <div class="d-content">
+            <div class="d-row">
+              <div>
+                <strong contenteditable="true">Sprint 4 — Consolidação Inicial</strong>
+                <div class="d-sub">
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Padrão inicial SPI documentado e governança SPI consolidada</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Roadmap de evolução do SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Plano formal de sustentação das práticas SPI</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Consolidação do piloto e apresentação executiva dos resultados SPI para a diretoria</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">Relatório final do projeto</span></div>
+                  <div class="d-sub-item"><span class="d-sub-bullet">◦</span><span contenteditable="true">🔭 Direcionamento inicial para evolução futura rumo ao TPM</span></div>
+                </div>
+              </div>
+              <button class="del-btn" onclick="delRow(this,'deliverable')" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <button class="add-row-btn" onclick="addDeliverable()">+ Adicionar entregável</button>
+    </div>
+  </div>
+
+  <!-- 9. EXCLUSÕES DO ESCOPO -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">9</div>
+      <div class="sec-title" contenteditable="true">Exclusões do Escopo</div>
+    </div>
+    <div class="section-body">
+      <div class="list-2col" id="exclusoes-list">
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Implantação corporativa completa de TPM dentro do escopo atual do projeto.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Gestão técnica dos demais projetos da carteira de melhoria contínua da empresa.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Implantação completa de Lean Manufacturing — o SPI cria a base, mas não executa o Lean de forma integral.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Alterações estruturais nos sistemas MES, WMS e PDM existentes.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Desenvolvimento de automações industriais ou aquisição de novos softwares de gestão.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Revisão estrutural de layout fabril ou reestruturações organizacionais de departamentos.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Gestão operacional das áreas produtivas — o SPI estrutura o sistema, não gerencia a operação.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+        <div class="list-item red-bg"><span class="list-bullet">✕</span><span contenteditable="true">Execução técnica dos projetos produtivos da carteira industrial da empresa.</span><button class="del-btn" onclick="delRow(this,'list-item')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addListItem('exclusoes-list','red-bg')">+ Adicionar exclusão</button>
+    </div>
+  </div>
+
+  <!-- 10. RISCOS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">10</div>
+      <div class="sec-title" contenteditable="true">Riscos e Mitigações</div>
+    </div>
+    <div class="section-body">
+      <div id="risks-list" class="risk-bullet-block">
+
+        <div class="risk-bullet-item" data-risk>
+          <div class="risk-bullet-header">
+            <span class="risk-bullet-id">R1</span>
+            <span class="risk-bullet-title" contenteditable="true">Baixo engajamento das lideranças</span>
+            <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+          </div>
+          <div class="risk-bullet-body">
+            <div>
+              <div class="risk-col-label">Risco</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Baixo engajamento das lideranças e áreas no processo de estruturação do SPI, comprometendo a adesão ao modelo construído</li></ul></div>
+            </div>
+            <div>
+              <div class="risk-col-label">Mitigação</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Envolvimento das lideranças desde as fases iniciais de diagnóstico e definição dos pilares</li><li contenteditable="true">Alinhamentos periódicos com patrocínio da Diretoria Industrial</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-bullet-item" data-risk>
+          <div class="risk-bullet-header">
+            <span class="risk-bullet-id">R2</span>
+            <span class="risk-bullet-title" contenteditable="true">Conflito com projetos em andamento</span>
+            <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+          </div>
+          <div class="risk-bullet-body">
+            <div>
+              <div class="risk-col-label">Risco</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Conflito com outros projetos pela prioridade de tempo e recursos das mesmas áreas envolvidas no SPI</li></ul></div>
+            </div>
+            <div>
+              <div class="risk-col-label">Mitigação</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Delimitação clara de escopo e responsabilidades via TAP aprovado</li><li contenteditable="true">Alinhamento do calendário de sprints com os demais projetos da carteira</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-bullet-item" data-risk>
+          <div class="risk-bullet-header">
+            <span class="risk-bullet-id">R3</span>
+            <span class="risk-bullet-title" contenteditable="true">Sobrecarga operacional das áreas</span>
+            <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+          </div>
+          <div class="risk-bullet-body">
+            <div>
+              <div class="risk-col-label">Risco</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Sobrecarga operacional reduzindo a disponibilidade para participação nas entregas do SPI, especialmente em períodos de pico produtivo</li></ul></div>
+            </div>
+            <div>
+              <div class="risk-col-label">Mitigação</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Priorização gradual das entregas ao longo dos sprints</li><li contenteditable="true">Reuniões e workshops planejados com antecedência, com carga horária compatível com a disponibilidade das áreas</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-bullet-item" data-risk>
+          <div class="risk-bullet-header">
+            <span class="risk-bullet-id">R4</span>
+            <span class="risk-bullet-title" contenteditable="true">Diferença de maturidade entre setores</span>
+            <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+          </div>
+          <div class="risk-bullet-body">
+            <div>
+              <div class="risk-col-label">Risco</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Dificuldade de padronização entre setores com diferentes níveis de maturidade em melhoria contínua, gerando resistência ou baixa aderência ao modelo SPI</li></ul></div>
+            </div>
+            <div>
+              <div class="risk-col-label">Mitigação</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Construção conjunta do SPI com as áreas, respeitando estágios de maturidade</li><li contenteditable="true">Aplicação piloto em S3 para validar o modelo antes da consolidação final</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="risk-bullet-item" data-risk>
+          <div class="risk-bullet-header">
+            <span class="risk-bullet-id">R5</span>
+            <span class="risk-bullet-title" contenteditable="true">Dependência de projetos paralelos</span>
+            <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+          </div>
+          <div class="risk-bullet-body">
+            <div>
+              <div class="risk-col-label">Risco</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Projetos paralelos (Shop Floor, 5S, Kaizens, MES) podem sofrer atrasos ou mudanças de rumo, impactando a integração planejada no SPI</li></ul></div>
+            </div>
+            <div>
+              <div class="risk-col-label">Mitigação</div>
+              <div class="risk-col-text"><ul><li contenteditable="true">Alinhamentos periódicos entre os responsáveis pelos projetos relacionados</li><li contenteditable="true">SPI projetado com flexibilidade para integrar iniciativas no estágio em que se encontram, sem depender de conclusão prévia de outros projetos</li></ul></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <button class="add-row-btn" onclick="addRisk()">+ Adicionar risco</button>
+    </div>
+  </div>
+
+  <!-- 11. GMO -->
+  <div class="section">
+    <div class="section-head">
+      <div class="sec-num">11</div>
+      <div class="sec-title" contenteditable="true">Gestão de Mudança Organizacional (GMO)</div>
+    </div>
+    <div class="section-body">
+      <div class="gmo-grid" id="gmo-grid">
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">📢</span> <span contenteditable="true">Comunicação</span></div><span contenteditable="true">Divulgação interna do projeto SPI via Microsoft Teams e grupos do WhatsApp, apresentando o propósito do sistema, os pilares e os benefícios para cada área. Comunicação contínua sobre o progresso das sprints.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">🤝</span> <span contenteditable="true">Envolvimento</span></div><span contenteditable="true">Construção participativa do SPI com representantes de todas as áreas, garantindo que o modelo reflita a realidade operacional e conte com legitimidade das equipes desde o início.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">🎓</span> <span contenteditable="true">Capacitação</span></div><span contenteditable="true">Workshops de nivelamento sobre melhoria contínua e os pilares do SPI. Identificação e desenvolvimento de facilitadores por setor para disseminar e sustentar o sistema.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">🔍</span> <span contenteditable="true">Benchmarking</span></div><span contenteditable="true">Referências externas de empresas com Sistemas de Produção consolidados (Agrale, Fras-le, Soprano, InBetta) para embasar as decisões de modelagem do SPI Inova.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">📋</span> <span contenteditable="true">Acompanhamento</span></div><span contenteditable="true">Reuniões periódicas de acompanhamento do SPI com as lideranças, painel de indicadores visível e governança formal de revisão e melhoria do modelo ao longo do tempo.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+        <div class="gmo-card"><div class="gmo-title"><span contenteditable="true">🌱</span> <span contenteditable="true">Sustentação</span></div><span contenteditable="true">Plano de sustentação SPI documentado em S4 com critérios claros de maturidade, responsáveis por área e mecanismos de auditoria para garantir a continuidade do sistema após o encerramento do projeto.</span><button class="del-btn" onclick="delRow(this,'gmo-card')" title="Remover">✕</button></div>
+      </div>
+      <button class="add-row-btn" onclick="addGMO()">+ Adicionar pilar GMO</button>
+    </div>
+  </div>
+
+  <!-- FOOTER DOC -->
+  <div class="doc-footer">
+    <span contenteditable="true">Inova <em>Sistemas Eletrônicos</em> · TAP — Sistema de Produção Inova · v1.0</span>
+    <span class="doc-date" id="doc-date" contenteditable="true"></span>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+document.getElementById('doc-date').textContent =
+  new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+const mainTitleEl = document.getElementById('main-title-editable');
+const updatePageTitle = () => {
+  document.title = mainTitleEl.textContent.trim() + ' · Inova TAP';
+};
+mainTitleEl.addEventListener('input', updatePageTitle);
+updatePageTitle();
+
+let editMode = true;
+function toggleEdit(){
+  editMode = !editMode;
+  document.body.classList.toggle('editing', editMode);
+  const btn = document.getElementById('edit-mode-toggle');
+  btn.textContent = editMode ? '✎  Edição ON' : '👁  Visualização';
+  btn.classList.toggle('active', editMode);
+}
+
+function saveLocal(){
+  localStorage.setItem('tap_spi_html', document.getElementById('page-wrap').innerHTML);
+  localStorage.setItem('tap_spi_version', '202605130002');
+  const ind = document.getElementById('save-indicator');
+  ind.style.opacity='1';
+  setTimeout(()=>ind.style.opacity='0', 2000);
+}
+
+document.getElementById('page-wrap').addEventListener('input', ()=>{
+  clearTimeout(window._autoSave);
+  window._autoSave = setTimeout(saveLocal, 1500);
+});
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  const FILE_VERSION = '202605130002';
+  const savedVersion = localStorage.getItem('tap_spi_version');
+  const saved = localStorage.getItem('tap_spi_html');
+  if(saved && savedVersion === FILE_VERSION) {
+    document.getElementById('page-wrap').innerHTML = saved;
+    const newMain = document.getElementById('main-title-editable');
+    if(newMain) { newMain.addEventListener('input', updatePageTitle); updatePageTitle(); }
+  } else {
+    localStorage.removeItem('tap_spi_html');
+    localStorage.removeItem('tap_spi_version');
+  }
+});
+
+function delRow(btn, cls){
+  const el = btn.closest('.'+cls);
+  if(el) el.remove();
+  renumberDeliverables();
+  renumberRisks();
+  saveLocal();
+}
+
+function addTeam(){
+  const grid = document.getElementById('team-grid');
+  const card = document.createElement('div');
+  card.className='team-card'; card.setAttribute('data-team','');
+  card.innerHTML=`<div class="team-card-inner">
+    <div class="team-role" contenteditable="true">Papel</div>
+    <div class="team-name" contenteditable="true">Nome / Área</div>
+  </div><button class="del-btn" onclick="delRow(this,'team-card')">✕</button>`;
+  grid.appendChild(card);
+  card.querySelector('[contenteditable]').focus();
+}
+
+function addListItem(listId, extraClass){
+  const list = document.getElementById(listId);
+  const item = document.createElement('div');
+  item.className='list-item '+extraClass;
+  const bullet = extraClass==='red-bg'?'✕': extraClass==='yellow-bg'?'⚠':'▸';
+  item.innerHTML=`<span class="list-bullet">${bullet}</span><span contenteditable="true">Novo item</span><button class="del-btn" onclick="delRow(this,'list-item')">✕</button>`;
+  list.appendChild(item);
+  item.querySelector('[contenteditable]').focus();
+}
+
+function addGanha(){
+  const grid = document.getElementById('ganhos-grid');
+  const el = document.createElement('div');
+  el.className='ganha';
+  el.innerHTML=`<div class="ganha-icon" contenteditable="true">⭐</div><span contenteditable="true">Novo ganho</span><button class="del-btn" onclick="delRow(this,'ganha')">✕</button>`;
+  grid.appendChild(el);
+  el.querySelector('[contenteditable]').focus();
+}
+
+function addDeliverable(){
+  const list = document.getElementById('deliverables-list');
+  const count = list.querySelectorAll('[data-deliv]').length + 1;
+  const el = document.createElement('div');
+  el.className='deliverable'; el.setAttribute('data-deliv','');
+  el.innerHTML=`<div class="d-left"><div class="d-dot" contenteditable="true">E${count}</div></div>
+    <div class="d-content">
+      <div class="d-row">
+        <div><strong contenteditable="true">Título do entregável</strong><span contenteditable="true">Descrição do entregável.</span></div>
+        <button class="del-btn" onclick="delRow(this,'deliverable')">✕</button>
+      </div>
+    </div>`;
+  list.appendChild(el);
+  const items = list.querySelectorAll('[data-deliv]');
+  if(items.length>1){
+    const prev = items[items.length-2];
+    if(!prev.querySelector('.d-line')){
+      const dl=document.createElement('div'); dl.className='d-line';
+      prev.querySelector('.d-left').appendChild(dl);
+    }
+  }
+  el.querySelector('[contenteditable]').focus();
+}
+
+function renumberDeliverables(){
+  document.querySelectorAll('[data-deliv] .d-dot').forEach((dot,i)=>{
+    dot.textContent='E'+(i+1);
+  });
+}
+
+function addRisk(){
+  const list = document.getElementById('risks-list');
+  const count = list.querySelectorAll('[data-risk]').length + 1;
+  const wrap = document.createElement('div');
+  wrap.className='risk-bullet-item'; wrap.setAttribute('data-risk','');
+  wrap.innerHTML=`<div class="risk-bullet-header">
+    <span class="risk-bullet-id">R${count}</span>
+    <span class="risk-bullet-title" contenteditable="true">Título do risco</span>
+    <button class="del-btn" onclick="delRow(this,'risk-bullet-item')" title="Remover" style="margin-left:4px;">✕</button>
+  </div>
+  <div class="risk-bullet-body">
+    <div>
+      <div class="risk-col-label">Risco</div>
+      <div class="risk-col-text"><ul><li contenteditable="true">Descrição do risco.</li></ul></div>
+    </div>
+    <div>
+      <div class="risk-col-label">Mitigação</div>
+      <div class="risk-col-text"><ul><li contenteditable="true">Ação de mitigação.</li></ul></div>
+    </div>
+  </div>`;
+  list.appendChild(wrap);
+  wrap.querySelector('[contenteditable]').focus();
+}
+
+function renumberRisks(){
+  document.querySelectorAll('[data-risk] .risk-bullet-id').forEach((id,i)=>{
+    id.textContent='R'+(i+1);
+  });
+}
+
+function addGMO(){
+  const grid = document.getElementById('gmo-grid');
+  const el = document.createElement('div');
+  el.className='gmo-card';
+  el.innerHTML=`<div class="gmo-title"><span contenteditable="true">⚙️</span> <span contenteditable="true">Pilar</span></div><span contenteditable="true">Descrição da ação de gestão de mudança.</span><button class="del-btn" onclick="delRow(this,'gmo-card')">✕</button>`;
+  grid.appendChild(el);
+  el.querySelector('[contenteditable]').focus();
+}
+
+function exportPDF(){
+  saveLocal();
+  document.body.classList.remove('editing');
+  document.querySelectorAll('.add-row-btn,.del-btn').forEach(el=>{
+    el.style.setProperty('display','none','important');
+  });
+  const toolbar = document.getElementById('toolbar');
+  toolbar.style.display='none';
+
+  const element = document.getElementById('page-wrap');
+  const opt = {
+    margin: [8,8,8,8],
+    filename: 'TAP_SPI_Inova_v1.pdf',
+    image: {type:'jpeg', quality:0.98},
+    html2canvas: {scale:2, useCORS:true, letterRendering:true, logging:false, backgroundColor:'#ffffff'},
+    jsPDF: {unit:'mm', format:'a4', orientation:'portrait', compress:true},
+    pagebreak: {mode:['avoid-all','css','legacy']}
+  };
+
+  html2pdf().set(opt).from(element).save().then(()=>{
+    toolbar.style.display='';
+    if(editMode) document.body.classList.add('editing');
+    document.querySelectorAll('.add-row-btn,.del-btn').forEach(el=>{
+      el.style.removeProperty('display');
+    });
+  });
+}
+</script>
+</body>
+</html>
